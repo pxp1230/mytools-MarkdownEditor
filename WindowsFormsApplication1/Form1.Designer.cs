@@ -39,7 +39,7 @@
             this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBox1.Font = new System.Drawing.Font("微软雅黑", 10F);
             this.textBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(204)))), ((int)(((byte)(255)))));
-            this.textBox1.ImeMode = System.Windows.Forms.ImeMode.On;
+            this.textBox1.ImeMode = System.Windows.Forms.ImeMode.Hangul;
             this.textBox1.Location = new System.Drawing.Point(0, 0);
             this.textBox1.MaxLength = 1000000;
             this.textBox1.Multiline = true;
@@ -48,7 +48,6 @@
             this.textBox1.Size = new System.Drawing.Size(442, 569);
             this.textBox1.TabIndex = 0;
             this.textBox1.TabStop = false;
-            this.textBox1.Text = "";
             this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
             // Form1
