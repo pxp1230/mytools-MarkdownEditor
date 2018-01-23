@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -33,6 +33,10 @@ namespace WindowsFormsApplication1
                 {
                     ReadMarkdownFile(file.FullName);
                 }
+            }
+            else
+            {
+                FileTypeRegister.FileTypeReg(".md");
             }
         }
 
