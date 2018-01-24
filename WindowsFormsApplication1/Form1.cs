@@ -836,7 +836,7 @@ namespace WindowsFormsApplication1
             }
         }
 
-        string pandoc_param_raw = "-s -f markdown_github -H \"" + Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "header.txt") + "\" -T \"{0}\" -t html5 \"{1}.md\" > \"{1}.html\"";
+        string pandoc_param_raw = "\"{0}.md\" -s -f gfm+hard_line_breaks -H \"" + Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "header.txt") + "\" -t html5 -o \"{0}.html\"";
         static Process pandoc;
         /// <summary>
         /// 生成HTML文件，不运行
@@ -847,9 +847,8 @@ namespace WindowsFormsApplication1
             if (!string.IsNullOrEmpty(md_file_path) && isTextSaved)
             {
                 FileInfo file = new FileInfo(md_file_path);
-                string raw_name = file.Name.Substring(0, file.Name.LastIndexOf("."));
                 string raw_fullName = file.FullName.Substring(0, file.FullName.LastIndexOf("."));
-                string pandoc_param = string.Format(pandoc_param_raw, raw_name, raw_fullName);
+                string pandoc_param = string.Format(pandoc_param_raw, raw_fullName);
                 if (pandoc == null)
                 {
                     pandoc = new Process();
