@@ -10,6 +10,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows.Forms;
 
 namespace WindowsFormsApplication1
@@ -733,7 +734,7 @@ namespace WindowsFormsApplication1
                             curIndex = maxIndex + 1;
                         }
                         newImage.Save(md_folder_path + "/" + curIndex + ".jpg", ImageFormat.Jpeg);
-                        insertedJPG = "![](" + new DirectoryInfo(md_folder_path).Name + "/" + curIndex + ".jpg)";
+                        insertedJPG = "![](" + HttpUtility.UrlEncode(new DirectoryInfo(md_folder_path).Name, Encoding.UTF8).Replace("+", "%20") + "/" + curIndex + ".jpg)";
                         SetTextBoxSelection(textBox1.SelectionStart, textBox1.SelectionLength, insertedJPG);
                     }
                     else if (!string.IsNullOrEmpty(insertedJPG))
@@ -1188,14 +1189,17 @@ namespace WindowsFormsApplication1
         string _GetFilePath(FileInfo file)
         {
             string ret = "";
+            string filename = file.Name;
             string path = file.FullName.Substring(md_folder_path.LastIndexOf('\\') + 1).Replace('\\', '/');
+            //HTML URL 编码：http://www.w3school.com.cn/tags/html_ref_urlencode.html
+            path = HttpUtility.UrlEncode(path, Encoding.UTF8).Replace("%2f", "/").Replace("+", "%20");
             if (file.Extension == ".jpg" || file.Extension == ".png" || file.Extension == ".gif" || file.Extension == ".webp")
             {
                 ret += "![](" + path + ")\r\n";
             }
             else if (file.Extension == ".mp4")
             {
-                ret += "<video src=\"" + path + "\" controls preload=\"none\"></video>\r\n";
+                ret += "<video src=\"" + path + "\" controls preload=\"none\" poster=\"\"></video>\r\n";
             }
             else if (file.Extension == ".mp3")
             {
@@ -1203,7 +1207,7 @@ namespace WindowsFormsApplication1
             }
             else
             {
-                ret += "[" + path.Substring(path.IndexOf('/') + 1) + "](" + path + ")\r\n";
+                ret += "[" + filename + "](" + path + ")\r\n";
             }
             return ret;
         }
