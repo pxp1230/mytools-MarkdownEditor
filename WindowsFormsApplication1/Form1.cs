@@ -856,6 +856,10 @@ namespace WindowsFormsApplication1
                     pandoc.StartInfo.FileName = "cmd";
                     pandoc.StartInfo.CreateNoWindow = true;
                     pandoc.StartInfo.UseShellExecute = false;
+                    pandoc.StartInfo.RedirectStandardInput = true;
+                    pandoc.StartInfo.RedirectStandardOutput = true;
+                    pandoc.StartInfo.RedirectStandardError = true;
+                    pandoc.StartInfo.StandardOutputEncoding = Encoding.UTF8;
                 }
                 pandoc.StartInfo.Arguments = "/c pandoc " + pandoc_param;
                 pandoc.Start();
