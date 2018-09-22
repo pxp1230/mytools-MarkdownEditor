@@ -152,15 +152,18 @@ namespace WindowsFormsApplication1
                 case Keys.Shift | Keys.F3:
                     ShiftF3();
                     return true;
-                case Keys.Control | Keys.Shift | Keys.B:
-                    CtrlShiftB();
-                    return true;
-                case Keys.F5:
-                case Keys.Control | Keys.P:
+                //case Keys.Control | Keys.Shift | Keys.B:
+                //    CtrlShiftB();
+                //    return true;
+                case Keys.F5://编译并预览
                     F5();
                     return true;
-                case Keys.Control | Keys.F5:
+                //case Keys.Control | Keys.F5:
+                case Keys.F12://预览
                     CtrlF5();
+                    return true;
+                case Keys.F11://全屏切换
+                    F11();
                     return true;
                 case Keys.Control | Keys.D1:
                     MarkdownPrefix("# ");
@@ -225,8 +228,8 @@ namespace WindowsFormsApplication1
                 case Keys.Control | Keys.Shift | Keys.Oem6:
                     MarkdownTwoSide("{", "}");
                     return true;
-                case Keys.Control | Keys.Shift | Keys.Home:
-                    CtrlShiftHome();
+                case Keys.Control | Keys.Home:
+                    CtrlHome();
                     return true;
                 default:
                     return base.ProcessCmdKey(ref msg, keyData);   //其他键按默认处理
@@ -896,6 +899,20 @@ namespace WindowsFormsApplication1
             }
         }
         /// <summary>
+        /// 全屏切换，调用窗口最大化功能
+        /// </summary>
+        public void F11()
+        {
+            if (this.WindowState == FormWindowState.Maximized)
+            {
+                this.WindowState = FormWindowState.Normal;
+            }
+            else
+            {
+                this.WindowState = FormWindowState.Maximized;
+            }
+        }
+        /// <summary>
         /// 生成HTML文件，并运行
         /// </summary>
         public void F5()
@@ -912,7 +929,7 @@ namespace WindowsFormsApplication1
             {
                 FileInfo html = new FileInfo(md_file_path.Substring(0, md_file_path.LastIndexOf(".")) + ".html");
                 if (html.Exists)
-                    Process.Start("explorer", html.FullName);
+                    Process.Start(html.FullName);
             }
         }
 
@@ -1126,7 +1143,7 @@ namespace WindowsFormsApplication1
             return false;
         }
 
-        public void CtrlShiftHome()
+        public void CtrlHome()
         {
             if (string.IsNullOrEmpty(md_file_path))
             {
