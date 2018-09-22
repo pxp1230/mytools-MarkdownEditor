@@ -810,13 +810,13 @@ namespace WindowsFormsApplication1
         {
             if (isTextSaved)
             {
+                isTextSaved = false;
                 _刷新窗口Title();
-               isTextSaved = false;
             }
         }
         private void _刷新窗口Title()
         {
-            this.Text = "*" + (string.IsNullOrEmpty(md_file_path) ? "[新笔记]" : (md_file_name + " - " + md_file_path));
+            this.Text = (isTextSaved ? "" : "*") + (string.IsNullOrEmpty(md_file_path) ? "[新笔记]" : (md_file_name + " - " + md_file_path));
         }
 
         /// <summary>
