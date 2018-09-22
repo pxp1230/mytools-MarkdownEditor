@@ -575,11 +575,29 @@ namespace WindowsFormsApplication1
         {
             isTextSaved = false;
             InitPath(path);
-            textBox1.Text = File.ReadAllText(md_file_path, Encoding.UTF8);
+            string allText = File.ReadAllText(md_file_path, Encoding.UTF8);
+            int _n_index = allText.IndexOf('\n');
+            bool _需要转换换行符 = false;
+            if (_n_index >= 0)
+            {
+                if (allText.IndexOf("\r\n", Math.Max(_n_index - 1, 0), 2) < 0)
+                {
+                    _需要转换换行符 = true;
+                }
+            }
+            if (_需要转换换行符)
+            {
+                textBox1.Text = allText.Replace("\n", "\r\n");
+                isTextSaved = false;
+            }
+            else
+            {
+                textBox1.Text = allText;
+                isTextSaved = true;
+            }
             SetTextBoxSelection(0);
             textBox1.ScrollToCaret();
-            this.Text = path;
-            isTextSaved = true;
+            _刷新窗口Title();
         }
 
         /// <summary>
@@ -632,6 +650,13 @@ namespace WindowsFormsApplication1
         }
 
         string md_file_path = "";
+        string md_file_name
+        {
+            get
+            {
+                return Path.GetFileNameWithoutExtension(md_file_path);
+            }
+        }
         string md_folder_path = "";//附件文件夹
         public void InitPath(string path = "")
         {
@@ -785,9 +810,13 @@ namespace WindowsFormsApplication1
         {
             if (isTextSaved)
             {
-                this.Text = "*" + (string.IsNullOrEmpty(md_file_path) ? "[新笔记]" : md_file_path);
-                isTextSaved = false;
+                _刷新窗口Title();
+               isTextSaved = false;
             }
+        }
+        private void _刷新窗口Title()
+        {
+            this.Text = "*" + (string.IsNullOrEmpty(md_file_path) ? "[新笔记]" : (md_file_name + " - " + md_file_path));
         }
 
         /// <summary>
