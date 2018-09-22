@@ -231,6 +231,12 @@ namespace WindowsFormsApplication1
                 case Keys.Control | Keys.Home:
                     CtrlHome();
                     return true;
+                case Keys.Control | Keys.G:
+                    CtrlG();
+                    return true;
+                case Keys.Alt | Keys.N:
+                    AltN();
+                    return true;
                 default:
                     return base.ProcessCmdKey(ref msg, keyData);   //其他键按默认处理
             }
@@ -632,6 +638,18 @@ namespace WindowsFormsApplication1
         }
         public void Esc()
         {
+            if (_退出前询问是否保存())
+            {
+                this.FormClosing -= new FormClosingEventHandler(this.Form1_FormClosing);//为保证Application.Exit();时不再弹出提示，所以将FormClosing事件取消
+                Application.Exit();
+            }
+        }
+        /// <summary>
+        /// 退出前询问是否保存
+        /// </summary>
+        /// <returns>是否继续退出操作</returns>
+        bool _退出前询问是否保存()
+        {
             if ((textBox1.Text != "" && string.IsNullOrEmpty(md_file_path)) || (!string.IsNullOrEmpty(md_file_path) && !isTextSaved))
             {
                 DialogResult a = MessageBox.Show("是否要保存修改？", "未保存的修改 - " + (string.IsNullOrEmpty(md_file_path) ? "[新笔记]" : new FileInfo(md_file_path).Name), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
@@ -640,16 +658,15 @@ namespace WindowsFormsApplication1
                     CtrlS();
                     if (!isTextSaved)
                     {
-                        return;
+                        return false;
                     }
                 }
                 else if (a == DialogResult.Cancel)
                 {
-                    return;
+                    return false;
                 }
             }
-            this.FormClosing -= new FormClosingEventHandler(this.Form1_FormClosing);//为保证Application.Exit();时不再弹出提示，所以将FormClosing事件取消
-            Application.Exit();
+            return true;
         }
 
         string md_file_path = "";
@@ -1143,6 +1160,9 @@ namespace WindowsFormsApplication1
             return false;
         }
 
+        /// <summary>
+        /// 打开文件所在目录
+        /// </summary>
         public void CtrlHome()
         {
             if (string.IsNullOrEmpty(md_file_path))
@@ -1156,6 +1176,46 @@ namespace WindowsFormsApplication1
             {
                 Process.Start("explorer.exe", "/select," + md_file_path);
             }
+        }
+        /// <summary>
+        /// Open Git Gui
+        /// </summary>
+        void CtrlG()
+        {
+            if (string.IsNullOrEmpty(md_file_path))
+                return;
+            string dir = Path.GetDirectoryName(md_file_path);
+            var si = new ProcessStartInfo(@"C:\Program Files\Git\cmd\git-gui.exe", "--working-dir \"" + dir + "\"");
+            Process.Start(si);
+        }
+        /// <summary>
+        /// Edit with Notepad++
+        /// </summary>
+        void AltN()
+        {
+            bool _是否继续退出操作 = _退出前询问是否保存();
+            if (!_是否继续退出操作)
+                return;
+
+            if (string.IsNullOrEmpty(md_file_path))
+                return;
+
+            string exe_path = @"C:\Program Files (x86)\Notepad++\notepad++.exe";
+            string exe_path_64 = @"C:\Program Files\Notepad++\notepad++.exe";
+            if (!File.Exists(exe_path))
+            {
+                if (File.Exists(exe_path_64))
+                    exe_path = exe_path_64;
+                else
+                    exe_path = "";
+            }
+            if (exe_path != "")
+            {
+                string arg = "\"" + md_file_path + "\"";
+                var si = new ProcessStartInfo(exe_path, arg);
+                Process.Start(si);
+            }
+            Esc();
         }
 
         private void Form1_DragEnter(object sender, DragEventArgs e)
