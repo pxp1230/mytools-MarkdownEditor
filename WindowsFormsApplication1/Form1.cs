@@ -566,7 +566,7 @@ namespace WindowsFormsApplication1
             UTF8Encoding UTF8 = new UTF8Encoding(false);
             File.WriteAllText(md_file_path, textBox1.Text, UTF8);
             isTextSaved = true;
-            this.Text = md_file_path;
+            _刷新窗口Title();
         }
 
         public void CtrlN()
