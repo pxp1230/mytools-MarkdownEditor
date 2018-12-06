@@ -1265,6 +1265,9 @@ namespace WindowsFormsApplication1
             if (!Directory.Exists(md_folder_path))
                 Directory.CreateDirectory(md_folder_path);
 
+            //DragEventArgs.KeyState 属性: 4 SHIFT    8 CTRL    32 ALT
+            bool _以超链接的形式 = (e.KeyState & 32) == 32;
+
             string ret = "";
             foreach (var item in files)
             {
@@ -1279,7 +1282,7 @@ namespace WindowsFormsApplication1
                     if (e.Effect == DragDropEffects.Move)
                         file.MoveTo(Path.Combine(md_folder_path, file.Name));
                     FileInfo newFile = in_md_folder ? file : e.Effect == DragDropEffects.Copy ? file.CopyTo(Path.Combine(md_folder_path, file.Name)) : new FileInfo(Path.Combine(md_folder_path, file.Name));
-                    ret += _GetFilePath(newFile);
+                    ret += _GetFilePath(newFile, _以超链接的形式);
                     continue;
                 }
 
@@ -1289,50 +1292,57 @@ namespace WindowsFormsApplication1
                     string test = folder.Parent.FullName;
                     bool in_md_folder = test.Length >= md_folder_path.Length && (test + "\\").StartsWith(md_folder_path + "\\");
                     DirectoryInfo newFolder = in_md_folder ? folder : e.Effect == DragDropEffects.Copy ? CopyFolder(folder.FullName, Path.Combine(md_folder_path, folder.Name)) : MoveFolder(folder.FullName, Path.Combine(md_folder_path, folder.Name));
-                    ret += _GetFilesPaths(newFolder);
+                    ret += _GetFilesPaths(newFolder, _以超链接的形式);
                     continue;
                 }
             }
             SetTextBoxSelection(textBox1.SelectionStart, textBox1.SelectionLength, ret.Length >= 2 ? ret.Substring(0, ret.Length - 2) : null);
             this.Activate();
         }
-        string _GetFilePath(FileInfo file)
+        string _GetFilePath(FileInfo file, bool _以超链接的形式 = false)
         {
             string ret = "";
             string filename = file.Name;
             string path = file.FullName.Substring(md_folder_path.LastIndexOf('\\') + 1).Replace('\\', '/');
             //HTML URL 编码：http://www.w3school.com.cn/tags/html_ref_urlencode.html
             path = HttpUtility.UrlEncode(path, Encoding.UTF8).Replace("%2f", "/").Replace("+", "%20");
-            if (file.Extension == ".jpg" || file.Extension == ".png" || file.Extension == ".gif" || file.Extension == ".webp")
-            {
-                ret += "![](" + path + ")\r\n";
-            }
-            else if (file.Extension == ".mp4")
-            {
-                ret += "<video src=\"" + path + "\" controls preload=\"none\" poster=\"\"></video>\r\n";
-            }
-            else if (file.Extension == ".mp3")
-            {
-                ret += "<audio src=\"" + path + "\" controls preload=\"none\"></audio>\r\n";
-            }
-            else
+            if (_以超链接的形式)
             {
                 ret += "[" + filename + "](" + path + ")\r\n";
             }
+            else
+            {
+                if (file.Extension == ".jpg" || file.Extension == ".png" || file.Extension == ".gif" || file.Extension == ".webp")
+                {
+                    ret += "![](" + path + ")\r\n";
+                }
+                else if (file.Extension == ".mp4")
+                {
+                    ret += "<video src=\"" + path + "\" controls preload=\"none\" poster=\"\"></video>\r\n";
+                }
+                else if (file.Extension == ".mp3")
+                {
+                    ret += "<audio src=\"" + path + "\" controls preload=\"none\"></audio>\r\n";
+                }
+                else
+                {
+                    ret += "[" + filename + "](" + path + ")\r\n";
+                }
+            }
             return ret;
         }
-        string _GetFilesPaths(DirectoryInfo folder)
+        string _GetFilesPaths(DirectoryInfo folder, bool _以超链接的形式 = false)
         {
             string ret = "";
             FileInfo[] files = folder.GetFiles();
             foreach (var item in files)
             {
-                ret += _GetFilePath(item);
+                ret += _GetFilePath(item, _以超链接的形式);
             }
             DirectoryInfo[] folders = folder.GetDirectories();
             foreach (var item in folders)
             {
-                ret += _GetFilesPaths(item);
+                ret += _GetFilesPaths(item, _以超链接的形式);
             }
             return ret;
         }
