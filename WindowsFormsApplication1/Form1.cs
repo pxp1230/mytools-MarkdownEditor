@@ -721,7 +721,7 @@ namespace WindowsFormsApplication1
                     string test = file.Directory.FullName;
                     bool in_md_folder = test.Length >= md_folder_path.Length && (test + "\\").StartsWith(md_folder_path + "\\");
                     FileInfo newFile = in_md_folder ? file : file.CopyTo(Path.Combine(md_folder_path, file.Name));
-                    ret += _GetFilePath(newFile);
+                    ret += _GetFilePath(newFile, false, false);
                     continue;
                 }
             }
@@ -1223,10 +1223,14 @@ namespace WindowsFormsApplication1
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 //DragEventArgs.KeyState 属性: 4 SHIFT    8 CTRL    32 ALT
-                if ((e.KeyState & 8) == 8)
-                    e.Effect = DragDropEffects.Copy;
+                if ((e.KeyState & 4) == 4)
+                    e.Effect = DragDropEffects.Move;//将文件移动到 xxx_files 根目录（创建超链接）
+                else if ((e.KeyState & 32) == 32)
+                    e.Effect = DragDropEffects.Link;//创建文件链接（创建超链接）
+                else if ((e.KeyState & 8) == 8)
+                    e.Effect = DragDropEffects.Copy;//将文件复制到 xxx_files 根目录（创建超链接）
                 else
-                    e.Effect = DragDropEffects.Move;
+                    e.Effect = DragDropEffects.Scroll;//将文件移动到 xxx_files 根目录（创建多媒体标签）
             }
             else
                 e.Effect = DragDropEffects.None;
@@ -1262,11 +1266,11 @@ namespace WindowsFormsApplication1
                     return;
             }
 
-            if (!Directory.Exists(md_folder_path))
+            if (e.Effect != DragDropEffects.Link && !Directory.Exists(md_folder_path))
                 Directory.CreateDirectory(md_folder_path);
 
-            //DragEventArgs.KeyState 属性: 4 SHIFT    8 CTRL    32 ALT
-            bool _以超链接的形式 = (e.KeyState & 32) == 32;
+            bool _以超链接的形式 = e.Effect != DragDropEffects.Scroll;
+            string md所在目录 = Path.GetDirectoryName(md_file_path);
 
             string ret = "";
             foreach (var item in files)
@@ -1279,10 +1283,24 @@ namespace WindowsFormsApplication1
                 {
                     string test = file.Directory.FullName;
                     bool in_md_folder = test.Length >= md_folder_path.Length && (test + "\\").StartsWith(md_folder_path + "\\");
-                    if (e.Effect == DragDropEffects.Move)
-                        file.MoveTo(Path.Combine(md_folder_path, file.Name));
-                    FileInfo newFile = in_md_folder ? file : e.Effect == DragDropEffects.Copy ? file.CopyTo(Path.Combine(md_folder_path, file.Name)) : new FileInfo(Path.Combine(md_folder_path, file.Name));
-                    ret += _GetFilePath(newFile, _以超链接的形式);
+                    bool _是否和md同一个文件夹 = test.Length >= md所在目录.Length && (test + "\\").StartsWith(md所在目录 + "\\");
+                    FileInfo new_file = file;
+                    if (!in_md_folder)
+                    {
+                        if (e.Effect == DragDropEffects.Move || e.Effect == DragDropEffects.Scroll)
+                        {
+                            file.MoveTo(Path.Combine(md_folder_path, file.Name));
+                            new_file = new FileInfo(Path.Combine(md_folder_path, file.Name));
+                            in_md_folder = true;
+                        }
+                        else if (e.Effect == DragDropEffects.Copy)
+                        {
+                            file.CopyTo(Path.Combine(md_folder_path, file.Name));
+                            new_file = new FileInfo(Path.Combine(md_folder_path, file.Name));
+                            in_md_folder = true;
+                        }
+                    }
+                    ret += _GetFilePath(new_file, !in_md_folder && !_是否和md同一个文件夹, _以超链接的形式);
                     continue;
                 }
 
@@ -1291,21 +1309,38 @@ namespace WindowsFormsApplication1
                 {
                     string test = folder.Parent.FullName;
                     bool in_md_folder = test.Length >= md_folder_path.Length && (test + "\\").StartsWith(md_folder_path + "\\");
-                    DirectoryInfo newFolder = in_md_folder ? folder : e.Effect == DragDropEffects.Copy ? CopyFolder(folder.FullName, Path.Combine(md_folder_path, folder.Name)) : MoveFolder(folder.FullName, Path.Combine(md_folder_path, folder.Name));
-                    ret += _GetFilesPaths(newFolder, _以超链接的形式);
+                    bool _是否和md同一个文件夹 = test.Length >= md所在目录.Length && (test + "\\").StartsWith(md所在目录 + "\\");
+                    DirectoryInfo new_Folder = folder;
+                    if (!in_md_folder)
+                    {
+                        if (e.Effect == DragDropEffects.Move || e.Effect == DragDropEffects.Scroll)
+                        {
+                            MoveFolder(folder.FullName, Path.Combine(md_folder_path, folder.Name));
+                            new_Folder = new DirectoryInfo(Path.Combine(md_folder_path, folder.Name));
+                            in_md_folder = true;
+                        }
+                        else if (e.Effect == DragDropEffects.Copy)
+                        {
+                            CopyFolder(folder.FullName, Path.Combine(md_folder_path, folder.Name));
+                            new_Folder = new DirectoryInfo(Path.Combine(md_folder_path, folder.Name));
+                            in_md_folder = true;
+                        }
+                    }
+                    ret += _GetFilesPaths(new_Folder, !in_md_folder && !_是否和md同一个文件夹, _以超链接的形式);
                     continue;
                 }
             }
             SetTextBoxSelection(textBox1.SelectionStart, textBox1.SelectionLength, ret.Length >= 2 ? ret.Substring(0, ret.Length - 2) : null);
             this.Activate();
         }
-        string _GetFilePath(FileInfo file, bool _以超链接的形式 = false)
+        string _GetFilePath(FileInfo file, bool _是否全路径, bool _以超链接的形式)
         {
             string ret = "";
             string filename = file.Name;
-            string path = file.FullName.Substring(md_folder_path.LastIndexOf('\\') + 1).Replace('\\', '/');
+            string md所在目录 = Path.GetDirectoryName(md_file_path);
+            string path = (_是否全路径 ? file.FullName : file.FullName.Substring(md所在目录.Length + 1)).Replace('\\', '/');
             //HTML URL 编码：http://www.w3school.com.cn/tags/html_ref_urlencode.html
-            path = HttpUtility.UrlEncode(path, Encoding.UTF8).Replace("%2f", "/").Replace("+", "%20");
+            path = (_是否全路径 ? "file:///" : "") + HttpUtility.UrlEncode(path, Encoding.UTF8).Replace("%2f", "/").Replace("+", "%20");
             if (_以超链接的形式)
             {
                 ret += "[" + filename + "](" + path + ")\r\n";
@@ -1331,18 +1366,18 @@ namespace WindowsFormsApplication1
             }
             return ret;
         }
-        string _GetFilesPaths(DirectoryInfo folder, bool _以超链接的形式 = false)
+        string _GetFilesPaths(DirectoryInfo folder, bool _是否全路径, bool _以超链接的形式)
         {
             string ret = "";
             FileInfo[] files = folder.GetFiles();
             foreach (var item in files)
             {
-                ret += _GetFilePath(item, _以超链接的形式);
+                ret += _GetFilePath(item, _是否全路径, _以超链接的形式);
             }
             DirectoryInfo[] folders = folder.GetDirectories();
             foreach (var item in folders)
             {
-                ret += _GetFilesPaths(item, _以超链接的形式);
+                ret += _GetFilesPaths(item, _是否全路径, _以超链接的形式);
             }
             return ret;
         }
