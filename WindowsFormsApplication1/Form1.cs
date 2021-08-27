@@ -587,6 +587,7 @@ namespace WindowsFormsApplication1
             string allText = File.ReadAllText(md_file_path, Encoding.UTF8);
             int _n_index = allText.IndexOf('\n');
             bool _需要转换换行符 = false;
+            bool _是否为空白文件 = string.IsNullOrWhiteSpace(allText);
             if (_n_index >= 0)
             {
                 if (allText.IndexOf("\r\n", Math.Max(_n_index - 1, 0), 2) < 0)
@@ -594,17 +595,24 @@ namespace WindowsFormsApplication1
                     _需要转换换行符 = true;
                 }
             }
-            if (_需要转换换行符)
+            if (_是否为空白文件)
+            {
+                textBox1.Text = "# " + Path.GetFileNameWithoutExtension(md_file_path) + "\r\n\r\n";
+                isTextSaved = false;
+                SetTextBoxSelection(textBox1.Text.Length);
+            }
+            else if (_需要转换换行符)
             {
                 textBox1.Text = allText.Replace("\n", "\r\n");
                 isTextSaved = false;
+                SetTextBoxSelection(0);
             }
             else
             {
                 textBox1.Text = allText;
                 isTextSaved = true;
+                SetTextBoxSelection(0);
             }
-            SetTextBoxSelection(0);
             textBox1.ScrollToCaret();
             _刷新窗口Title();
         }
